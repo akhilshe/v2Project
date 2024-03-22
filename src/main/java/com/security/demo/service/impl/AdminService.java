@@ -93,7 +93,7 @@ public class AdminService {
 			session.setAttribute("failMessage", "Session Expired");
 			return "redirect:/signin";
 	}	
-		if (user.equals("ADMIN"))
+		if (user.getUser().equals("ADMIN"))
 		{
 			List<Books> books = bookdao.fetchAllBooks();
 			if(books.isEmpty())
