@@ -89,6 +89,47 @@ public  class Services {
 		}
 		
 	}
+	public String buyNow(int id, HttpSession session, ModelMap map) {
+		User user = (User) session.getAttribute("user");
+		if (user == null) {
+			session.setAttribute("failMessage", "Invalid Session");
+			return "redirect:/login";
+		} else {
+			Book book = bookDao.findById(id);
+			if (book.getStock() >= 1) {
+				RazorpayClient razorpay = new RazorpayClient("rzp_test_71gEcjP0fsIjdi", "123F4USJtRwCeLden4tP7wpnYiF");
+				JSONObject orderRequest = new JSONObject();
+				orderRequest.put("amount", book.getPrice() * 100);
+				orderRequest.put("currency", "INR");
+
+				Order order = razorpay.orders.create(orderRequest);
+				String orderId = order.get("id");
+				BookOrder bookOrder = new BookOrder();
+				bookOrder.setAmount(book.getPrice());
+				bookOrder.setCurrency("INR");
+				bookOrder.setOrderId(orderId);
+				bookOrder.setBook(book);
+
+				if (user.getBookOrders() == null)
+					user.setBookOrders(new ArrayList<BookOrder>());
+
+				user.getBookOrders().add(bookOrder);
+				userDao.save(user);
+				session.setAttribute("user", user);
+				map.put("order", bookOrder);
+				map.put("key", "rzp_test_71gEcjP0fsIjdi");
+				map.put("user", user);
+				map.put("book", book);
+				return "ConfirmOrder";
+
+			} else {
+				session.setAttribute("failMessage", "Out of Stock");
+				return "redirect:/";
+			}
+		}
+
+	}
+	}
 
 	
 
